@@ -1,0 +1,44 @@
+
+
+
+hafez <- readtext("text mining/hafez.pdf") 
+
+
+hafez <- as.list(hafez) 
+hafez_df <- data_frame(text = hafez) 
+
+
+hafez_df <- hafez_df %>% 
+  unnest_tokens(word, text) 
+
+
+hafez_df <- hafez_df %>% count(word, sort = TRUE) %>% 
+  ungroup() 
+
+hafez_df <- hafez_df %>% 
+  anti_join(stop_words) 
+
+hafez_df$word <- removeNumbers(hafez_df$word) 
+
+hafez_df <- hafez_df %>% filter(word %nin% c("thou", "thy", "", "thee")) 
+
+
+set.seed(1234) 
+wordcloud(words = hafez_df$word, freq = hafez_df$n, min.freq = 1, 
+          max.words=50, random.order=FALSE, rot.per=0.25,  
+          colors=brewer.pal(8, "Dark2")) 
+
+
+
+
+####sentiments 
+
+hafez_df <- left_join(hafez_df, get_sentiments("bing"), by = c("word")) 
+hafez_df <- left_join(hafez_df, get_sentiments("nrc"), by = c("word")) 
+
+hafez_df_sent <- hafez_df[!is.na(hafez_df$sentiment.x) & !is.na(hafez_df$sentiment.y),] 
+
+
+
+ggplot(hafez_df_sent, aes(x = sentiment.y, y = n))+geom_bar(stat = "identity") 
+
